@@ -105,7 +105,7 @@ void OBSPropertiesView::ReloadProperties()
     if (weakObj) {
         OBSObject obj = GetObject();
         if (obj)
-            properties.reset(reloadCallback(obj.Get()))
+            properties.reset(reloadCallback(obj.Get()));
     } else {
         properties.reset(reloadCallback((void *)type.c_str()));
         obs_properties_apply_settings(properties.get(), settings);
@@ -216,7 +216,7 @@ cb(cb_),
 minSize(minSize_)
 {
     setFrameShape(QFrame::NoFrame);
-    QMetaObject::InvokeMetaMethod(this, "ReloadProperties", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "ReloadProperties", Qt::QueuedConnection);
 }
 
 OBSPropertiesView::OBSPropertiesView(OBSData settings_, const char *type_,
@@ -230,7 +230,7 @@ reloadCallback(reloadCallback_),
 minSize(minSize_)
 {
     setFrameShape(QFrame::NoFrame);
-    QMetaObject::InvokeMetaMethod(this, "ReloadProperties", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "ReloadProperties", Qt::QueuedConnection);
 }
 
 void OBSPropertiesView::resizeEvent(QResizeEvent *event)
