@@ -19,7 +19,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include "obs-classes/properties-view.hpp"
-#include "obs-classes-helper-functions.hpp"
 
 #include <obs.hpp>
 #include <obs-module.h>
@@ -36,5 +35,7 @@ public:
 	void SetSource(OBSSource source);
 
 private:
+	QWidget *widget = nullptr;
 	OBSPropertiesView *propertiesView = nullptr;
+	QLayout *ResetWidget();
 };

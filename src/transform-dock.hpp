@@ -19,7 +19,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include "transform-view.hpp"
-#include "obs-classes-helper-functions.hpp"
 
 #include <obs.hpp>
 #include <obs-module.h>
@@ -36,5 +35,6 @@ public:
 	void SetSceneItem(OBSSceneItem item);
 
 private:
+	QWidget *widget = nullptr;
 	OBSBasicTransform *transformView = nullptr;
 };

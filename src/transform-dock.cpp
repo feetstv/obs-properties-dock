@@ -21,18 +21,16 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 void TransformDock::SetSceneItem(OBSSceneItem item)
 {
 	if (item) {
-		if (transformView) {
+        if (transformView) {
 			transformView->SetNewItem(item);
-		} else {
-			transformView = new OBSBasicTransform(item);
-			setWidget(transformView);
-		}
+        } else {
+            transformView = new OBSBasicTransform(item);
+            setWidget(transformView);
+        }
 	} else {
-		if (transformView)
-			transformView = nullptr;
-
-		setWidget(new QLabel(
-			QTStr("Basic.TransformWindow.NoSelectedSource")));
+		QLabel *label = new QLabel(widget);
+		label->setText(obs_module_text("NoSelection"));
+		setWidget(label);
 	}
 }
 
@@ -42,5 +40,5 @@ TransformDock::TransformDock(QWidget *parent) : QDockWidget(parent)
 		    DockWidgetClosable);
 	setWindowTitle(obs_module_text("TransformDock.Title"));
 	setObjectName("TransformDock");
-	setFloating(true);
+	setFloating(false);
 }

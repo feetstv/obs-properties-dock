@@ -37,7 +37,10 @@ void PropertiesDock::SetSource(OBSSource source)
 			obs_source_update(source, settings);
 		};
 
-		OBSDataAutoRelease settings = obs_source_get_settings(source);
+		if (propertiesView)
+			propertiesView = nullptr;
+        
+        OBSDataAutoRelease settings = obs_source_get_settings(source);
 		propertiesView = new OBSPropertiesView(
 			settings.Get(), source,
 			(PropertiesReloadCallback)obs_source_properties,
@@ -46,19 +49,15 @@ void PropertiesDock::SetSource(OBSSource source)
 
 		setWidget(propertiesView);
 	} else {
-		if (propertiesView)
-			propertiesView = nullptr;
-
-		setWidget(new QLabel(
-			QTStr("Basic.TransformWindow.NoSelectedSource")));
+		QLabel *label = new QLabel(widget);
+		label->setText(obs_module_text("NoSelection"));
 	}
 }
 
 PropertiesDock::PropertiesDock(QWidget *parent) : QDockWidget(parent)
 {
-	setFeatures(DockWidgetMovable | DockWidgetFloatable |
-		    DockWidgetClosable);
+	setFeatures(DockWidgetMovable | DockWidgetFloatable | DockWidgetClosable);
 	setWindowTitle(obs_module_text("PropertiesDock.Title"));
 	setObjectName("PropertiesDock");
-	setFloating(true);
+	setFloating(false);
 }

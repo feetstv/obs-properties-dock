@@ -18,10 +18,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <QMainWindow>
-
-#define QTStr(lookupVal) QObject::tr(lookupVal)
+#include <QMetaObject>
+#include <QApplication>
 
 /* Modern problems require modern solutions */
 class YupThisReallyIsAThing {
@@ -31,10 +32,23 @@ public:
 		return static_cast<QMainWindow *>(
 			obs_frontend_get_main_window());
 	}
-};
-YupThisReallyIsAThing *const dontUseThisPlzKThx = new YupThisReallyIsAThing();
 
-inline YupThisReallyIsAThing *App()
-{
-	return dontUseThisPlzKThx;
-}
+	const char *MainText(const char *val)
+	{
+		const char *out;
+		if (QMetaObject::invokeMethod(qApp, "GetString",
+					      Q_RETURN_ARG(const char *, out),
+					      Q_ARG(const char *, val))) {
+			return out;
+		} else {
+			return val;
+		}
+	}
+};
+
+/* I really hope these get destroyed immediately */
+#define App() (new YupThisReallyIsAThing())
+
+//#define Str(lookupVal) App()->MainText(lookupVal)
+#define Str(lookupVal) obs_module_text(lookupVal)
+#define QTStr(lookupVal) QString::fromUtf8(Str(lookupVal))

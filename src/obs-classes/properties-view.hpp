@@ -8,7 +8,8 @@
 #include <vector>
 #include <memory>
 
-class QFormLayout;
+class QTableWidget;
+class QTableWidgetItem;
 class OBSPropertiesView;
 class QLabel;
 
@@ -97,8 +98,7 @@ private:
 	QWidget *widget = nullptr;
 	properties_t properties;
 	OBSData settings;
-	OBSWeakObjectAutoRelease weakObj;
-	void *rawObj = nullptr;
+    OBSWeakObjectAutoRelease weakObj;
 	std::string type;
 	PropertiesReloadCallback reloadCallback;
 	PropertiesUpdateCallback callback = nullptr;
@@ -109,33 +109,23 @@ private:
 	QWidget *lastWidget = nullptr;
 	bool deferUpdate;
 
-	QWidget *NewWidget(obs_property_t *prop, QWidget *widget,
-			   const char *signal);
+	QWidget *NewWidget(obs_property_t *prop, QWidget *widget, const char *signal);
 
-	QWidget *AddCheckbox(obs_property_t *prop);
-	QWidget *AddText(obs_property_t *prop, QFormLayout *layout,
-			 QLabel *&label);
-	void AddPath(obs_property_t *prop, QFormLayout *layout, QLabel **label);
-	void AddInt(obs_property_t *prop, QFormLayout *layout, QLabel **label);
-	void AddFloat(obs_property_t *prop, QFormLayout *layout,
-		      QLabel **label);
-	QWidget *AddList(obs_property_t *prop, bool &warning);
-	void AddEditableList(obs_property_t *prop, QFormLayout *layout,
-			     QLabel *&label);
-	QWidget *AddButton(obs_property_t *prop);
-	void AddColorInternal(obs_property_t *prop, QFormLayout *layout,
-			      QLabel *&label, bool supportAlpha);
-	void AddColor(obs_property_t *prop, QFormLayout *layout,
-		      QLabel *&label);
-	void AddColorAlpha(obs_property_t *prop, QFormLayout *layout,
-			   QLabel *&label);
-	void AddFont(obs_property_t *prop, QFormLayout *layout, QLabel *&label);
-	void AddFrameRate(obs_property_t *prop, bool &warning,
-			  QFormLayout *layout, QLabel *&label);
+	void AddCheckbox(obs_property_t *prop, QWidget **widget);
+    void AddText(obs_property_t *prop, QWidget **widget, QWidget **auxWidget);
+	void AddPath(obs_property_t *prop, QWidget **widget, QWidget **auxWidget);
+	void AddInt(obs_property_t *prop, QWidget **mainWidget);
+	void AddFloat(obs_property_t *prop, QWidget **mainWidget);
+	void AddList(obs_property_t *prop, QWidget **widget, bool &warning);
+	void AddEditableList(obs_property_t *prop, QWidget **widget, QWidget **auxLayout);
+	void AddButton(obs_property_t *prop, QWidget **widget);
+	void AddColorInternal(obs_property_t *prop, QWidget **widget, QWidget **auxWidget, bool supportAlpha);
+	void AddColor(obs_property_t *prop, QWidget **widget, QWidget **auxWidget);
+	void AddColorAlpha(obs_property_t *prop, QWidget **widget, QWidget **auxWidget);
+	void AddFont(obs_property_t *prop, QWidget **widget, QWidget **auxWidget);
+	void AddFrameRate(obs_property_t *prop, QWidget **widget, bool &warning);
 
-	void AddGroup(obs_property_t *prop, QFormLayout *layout);
-
-	void AddProperty(obs_property_t *property, QFormLayout *layout);
+	void AddProperty(obs_property_t *property, QTableWidget *widget);
 
 	void resizeEvent(QResizeEvent *event) override;
 
@@ -153,11 +143,6 @@ signals:
 	void PropertiesRefreshed();
 
 public:
-	OBSPropertiesView(OBSData settings, obs_object_t *obj,
-			  PropertiesReloadCallback reloadCallback,
-			  PropertiesUpdateCallback callback,
-			  PropertiesVisualUpdateCb cb = nullptr,
-			  int minSize = 0);
 	OBSPropertiesView(OBSData settings, void *obj,
 			  PropertiesReloadCallback reloadCallback,
 			  PropertiesUpdateCallback callback,
@@ -167,46 +152,27 @@ public:
 			  PropertiesReloadCallback reloadCallback,
 			  int minSize = 0);
 
-#define obj_constructor(type)                                              \
-	inline OBSPropertiesView(OBSData settings, obs_##type##_t *type,   \
-				 PropertiesReloadCallback reloadCallback,  \
-				 PropertiesUpdateCallback callback,        \
-				 PropertiesVisualUpdateCb cb = nullptr,    \
-				 int minSize = 0)                          \
-		: OBSPropertiesView(settings, (obs_object_t *)type,        \
-				    reloadCallback, callback, cb, minSize) \
-	{                                                                  \
-	}
-
-	obj_constructor(source);
-	obj_constructor(output);
-	obj_constructor(encoder);
-	obj_constructor(service);
-#undef obj_constructor
-
 	inline obs_data_t *GetSettings() const { return settings; }
 
-	inline void UpdateSettings()
-	{
-		callback(OBSGetStrongRef(weakObj), nullptr, settings);
-	}
+	inline void UpdateSettings() {
+        callback(OBSGetStrongRef(weakObj), nullptr, settings);
+    }
 	inline bool DeferUpdate() const { return deferUpdate; }
-
-	inline OBSObject GetObject() const { return OBSGetStrongRef(weakObj); }
-
+    inline OBSObject GetObject() const { return OBSGetStrongRef(weakObj); }
+    
 #define Def_IsObject(type)                                \
-	inline bool IsObject(obs_##type##_t *type) const  \
-	{                                                 \
-		OBSObject obj = OBSGetStrongRef(weakObj); \
-		return obj.Get() == (obs_object_t *)type; \
-	}
+     inline bool IsObject(obs_##type##_t *type) const  \
+     {                                                 \
+         OBSObject obj = OBSGetStrongRef(weakObj); \
+         return obj.Get() == (obs_object_t *)type; \
+     }
 
-	/* clang-format off */
-	Def_IsObject(source)
-	Def_IsObject(output)
-	Def_IsObject(encoder)
-	Def_IsObject(service)
-	/* clang-format on */
+     /* clang-format off */
+     Def_IsObject(source)
+     Def_IsObject(output)
+     Def_IsObject(encoder)
+     Def_IsObject(service)
+     /* clang-format on */
 
 #undef Def_IsObject
 };

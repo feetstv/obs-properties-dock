@@ -38,7 +38,7 @@ void SceneItemSelectSignal(void *, calldata_t *data)
 {
 	selectedItemsCount++;
 
-	OBSSceneItem item = (obs_sceneitem_t *)calldata_ptr(data, "item");
+    OBSSceneItem item = (obs_sceneitem_t *)calldata_ptr(data, "item");
 	OBSSource source = obs_sceneitem_get_source(item);
 
 	properties->SetSource(source);
@@ -54,41 +54,42 @@ void SceneItemDeselectSignal(void *, calldata_t *)
 	}
 }
 
-void SceneChangeEvenet(enum obs_frontend_event event, void *)
+void FrontendEvent(enum obs_frontend_event event, void *)
 {
 	if (event != OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED)
 		return;
 
-	/* Get new current scene */
 	OBSSourceAutoRelease currentSceneSource =
 		obs_frontend_preview_program_mode_active()
 			? obs_frontend_get_current_preview_scene()
 			: obs_frontend_get_current_scene();
 
+    selectSignal.Disconnect();
+    deselectSignal.Disconnect();
+
 	/* Connect signal to new source */
 	signal_handler_t *sh =
 		obs_source_get_signal_handler(currentSceneSource);
-	selectSignal.Connect(sh, "item_select", SceneItemSelectSignal, nullptr);
-	deselectSignal.Connect(sh, "item_deselect", SceneItemDeselectSignal,
-			       nullptr);
+    selectSignal.Connect(sh, "item_select", SceneItemSelectSignal, nullptr);
+    deselectSignal.Connect(sh, "item_deselect", SceneItemDeselectSignal, nullptr);
 
-	/* Get current item and count */
-	selectedItemsCount = 0;
 	struct cb_data {
 		int *selectedItemsCount;
 		OBSSceneItem selectedItem;
 	} data;
 	data.selectedItemsCount = &selectedItemsCount;
 	data.selectedItem = nullptr;
+
 	auto cb = [](obs_scene_t *, obs_sceneitem_t *item, void *data) {
 		struct cb_data *cb_data = static_cast<struct cb_data *>(data);
 		if (obs_sceneitem_selected(item)) {
-			(*cb_data->selectedItemsCount)++;
+			cb_data->selectedItemsCount++;
 			/* Always override to get the top-most item */
 			cb_data->selectedItem = item;
 		}
 		return true;
 	};
+
 	obs_scene_enum_items(obs_scene_from_source(currentSceneSource), cb,
 			     &data);
 
@@ -101,26 +102,26 @@ void SceneChangeEvenet(enum obs_frontend_event event, void *)
 bool obs_module_load(void)
 {
 	blog(LOG_INFO, "Version %s", PLUGIN_VERSION);
-	blog(LOG_INFO, "OBS: %s (compiled), %s (runtime)", OBS_VERSION,
-	     obs_get_version_string());
-	blog(LOG_INFO, "QT: %s (compiled), %s (runtime)", QT_VERSION_STR,
+	blog(LOG_INFO, "Compile time: OBS %s, QT %s", OBS_VERSION,
+	     QT_VERSION_STR);
+	blog(LOG_INFO, "Run time: OBS %s, QT %s", obs_get_version_string(),
 	     qVersion());
 
 	QMainWindow *main =
 		static_cast<QMainWindow *>(obs_frontend_get_main_window());
 	properties = new PropertiesDock(main);
 	transform = new TransformDock(main);
-
-	obs_frontend_add_dock(properties);
+    
+    obs_frontend_add_dock(properties);
 	obs_frontend_add_dock(transform);
 
-	obs_frontend_add_event_callback(SceneChangeEvenet, nullptr);
+	obs_frontend_add_event_callback(FrontendEvent, nullptr);
 	return true;
 }
 
 void obs_module_unload()
 {
-	obs_frontend_remove_event_callback(SceneChangeEvenet, nullptr);
-	selectSignal.Disconnect();
-	deselectSignal.Disconnect();
+	obs_frontend_remove_event_callback(FrontendEvent, nullptr);
+    selectSignal.Disconnect();
+    deselectSignal.Disconnect();
 }

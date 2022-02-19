@@ -24,7 +24,7 @@ OBSBasicTransform::OBSBasicTransform(OBSSceneItem item_)
 	ui->setupUi(this);
 
 	// Remove buttons on the bottom
-	delete ui->buttonBox;
+	ui->buttonBox->deleteLater();
 
 	HookWidgets();
 	LoadValues();
@@ -36,10 +36,10 @@ OBSBasicTransform::OBSBasicTransform(OBSSceneItem item_)
 }
 
 void OBSBasicTransform::SetNewItem(OBSSceneItem item_)
-{
-	item = item_;
-	LoadValues();
-}
+ {
+     item = item_;
+     LoadValues();
+ }
 
 /*------------------------------------------------------------*/
 /* From here on mostly copied from window-basic-transform.cpp */
